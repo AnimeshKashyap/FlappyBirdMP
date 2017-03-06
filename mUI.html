@@ -40,7 +40,7 @@
       }
       @font-face{
         font-family: "Flappy-Bird-Regular";
-        src: url('Flappy-Bird-Regular.ttf.woff') format('woff');
+        src: url('res/font/Flappy-Bird-Regular.ttf.woff') format('woff');
         font-weight:normal;
       }
       body{
@@ -54,18 +54,18 @@
   <body>
     <div id="windowSize"></div>
     <div class="hide">
-      <img id="birdIMG1" src="bird1.png">
-      <img id="birdIMG2" src="bird2.png">
-      <img id="birdIMG3" src="bird3.png">
-      <img id="birdIMG4" src="bird4.png">
-      <img id="skyIMG" src="sky.png">
-      <img id="landIMG" src="land.png">
+      <img id="birdIMG1" src="res/images/bird1.png">
+      <img id="birdIMG2" src="res/images/bird2.png">
+      <img id="birdIMG3" src="res/images/bird3.png">
+      <img id="birdIMG4" src="res/images/bird4.png">
+      <img id="skyIMG" src="res/images/sky.png">
+      <img id="landIMG" src="res/images/land.png">
     </div>
     <div id="notSupported" class="hide">LANDSCAPE MODE IS NOT SUPPORTED ON THIS RESOLUTION</div>
     <canvas id="canvas" width="0" height="0"></canvas>
-    <script type="text/javascript" src="websockets.js"></script>
-    <script type="text/javascript" src="ui.js"></script>
-    <script type="text/javascript" src="game.js"></script>
+    <script type="text/javascript" src="js/websockets.js"></script>
+    <script type="text/javascript" src="js/ui.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
     <script type="text/javascript">
       setTimeout(function(){initUI()},50);
     </script>

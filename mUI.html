@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+    <title>MobileUI</title>
+    <style type="text/css">
+      canvas { 
+        border: 1px solid black;
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+      }
+      #windowSize{
+        position:fixed;
+        z-index: -1;
+        width:100%;
+        height:100%;
+      }
+      .hide{
+        display: none;
+      }
+      #notSupported{
+        position: fixed;
+        background-color: black;
+        height: 100%;
+        width: 100%;
+        font-weight: bold;
+        font-size: 1.5em;
+        color: white;
+        text-align: center;
+        top:50%;
+        left:50%;
+        padding-top: 20%;
+        padding-left: 20%;
+        padding-right: 20%;
+        transform: translate(-50%,-50%);
+        z-index:9999;
+      }
+      @font-face{
+        font-family: "Flappy-Bird-Regular";
+        src: url('Flappy-Bird-Regular.ttf.woff') format('woff');
+        font-weight:normal;
+      }
+      body{
+        font-family: "Flappy-Bird-Regular";
+      }
+      div{
+        font-family: "serif";
+      }
+    </style>
+  </head>
+  <body>
+    <div id="windowSize"></div>
+    <div class="hide">
+      <img id="birdIMG1" src="bird1.png">
+      <img id="birdIMG2" src="bird2.png">
+      <img id="birdIMG3" src="bird3.png">
+      <img id="birdIMG4" src="bird4.png">
+      <img id="skyIMG" src="sky.png">
+      <img id="landIMG" src="land.png">
+    </div>
+    <div id="notSupported" class="hide">LANDSCAPE MODE IS NOT SUPPORTED ON THIS RESOLUTION</div>
+    <canvas id="canvas" width="0" height="0"></canvas>
+    <script type="text/javascript" src="websockets.js"></script>
+    <script type="text/javascript" src="ui.js"></script>
+    <script type="text/javascript" src="game.js"></script>
+    <script type="text/javascript">
+      setTimeout(function(){initUI()},50);
+    </script>
+
+  </body>
+</html>

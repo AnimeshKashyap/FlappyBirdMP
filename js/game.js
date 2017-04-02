@@ -1,4 +1,4 @@
-var canvas=document.getElementById("canvas");
+ var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext('2d');
 var initialMsec=new Date().getMilliseconds();
 /*var birdIMG=  
@@ -21,6 +21,7 @@ function initGame(){
 		birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
 		skyIMG=document.getElementById("skyIMG");
 		landIMG=document.getElementById("landIMG");
+        pipeIMG=document.getElementById("pipeIMG");
 		bird.x=Math.round(canvas.width/8);
 		bird.y=Math.round(canvas.height/2-birdIMG.height);
 		bird.width=Math.floor(canvas.width/2);
@@ -29,6 +30,10 @@ function initGame(){
 			bird.width=birdIMG.width;
 			bird.height=birdIMG.height;
 		}
+		pipe.width = pipeIMG.width;
+		pipe.height = pipeIMG.height;
+		pipe.y = canvas.height;
+		pipe.gap=canvas.width/3;
 		sky.y=canvas.height-skyIMG.height-landIMG.height;
 		sky.width=skyIMG.width;
 		sky.height=skyIMG.height;
@@ -69,7 +74,7 @@ var bird={ //276x64 -> 3frames
 		ctx.translate(this.width/(2*this.totalFrames),this.height/2);
 		ctx.rotate(((Math.PI/2)/25)*this.vy);
 		// ctx.strokeRect(0,0+sineOffset,this.width/this.totalFrames,this.height);
-		ctx.drawImage(birdIMG,0+(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*2),-this.height/2+sineOffset,this.width/this.totalFrames,this.height);
+		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*2),-this.height/2+sineOffset,this.width/this.totalFrames,this.height);
 		this.frame+=1;
 		this.frame%=this.totalFrames*4;
 		ctx.restore();
@@ -92,10 +97,34 @@ var sky={
 		}
 	}
 }
+
+var pipe={
+	x:0,
+	y:0,
+	vx:-1,
+	vy:0,
+	width:0,
+	height:0,
+	gap:0,//canvas.width/4,
+	draw: function() {
+
+        for(var i=0;i<Math.floor(canvas.width/(pipe.width+this.gap))+2;i++) {
+            // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(pipe.width+this.gap))+2);
+            // console.log(this.gap);
+            // console.log(this.y);
+            ctx.save();
+            ctx.drawImage(pipeIMG, this.x+this.gap*i, land.y-canvas.height/4, this.width, this.height);
+            ctx.drawImage(pipeIMG, this.x+this.gap*i, land.y-canvas.height/4-100, this.width, -this.height);
+        }
+
+
+    }
+}
+
 var land={
 	x:0,
 	y:0,//canvas.height-landIMG.height,
-	vx:-3,//-3,
+	vx:-4,//-3,
 	vy:0,
 	width:0,//landIMG.width,
 	height:0,//landIMG.height,
@@ -108,18 +137,27 @@ var land={
 function draw(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	sky.draw();
+    pipe.draw();
 	sky.x+=sky.vx;
+	pipe.x+=pipe.vx;
+    // console.log(pipe.x);
 	if(sky.x<-skyIMG.width+1)
 		sky.x=0;
+	if(pipe.x<-(pipe.gap+pipe.width))
+		pipe.x=0;
+	// console.log(-(pipe.gap+pipe.width));
 	land.draw();
 	land.x+=land.vx;
 	if(land.x<-landIMG.width+1)
 		land.x=0;
+
+
 	bird.draw();
 	if(started){
 		bird.y+=bird.vy;
 		bird.vy*=0.99;
 		bird.vy+=0.5;
+
 	}
 	else{
 		var fontSize=Math.round(canvas.height/8);

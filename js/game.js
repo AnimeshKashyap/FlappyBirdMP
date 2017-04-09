@@ -6,7 +6,7 @@ var skyIMG=  //276x109
 var landIMG=  //336x112*/
 var raf;
 var started=false;
-
+var speedFactor=1;
 
 function initGame(){
 	windowSize=document.getElementById("windowSize");
@@ -24,16 +24,25 @@ function initGame(){
         pipeIMG=document.getElementById("pipeIMG");
 		bird.x=Math.round(canvas.width/8);
 		bird.y=Math.round(canvas.height/2-birdIMG.height);
+		pipe.x=Math.round(canvas.width);
+		// pipe.width = pipeIMG.width/2;
+		pipe.height = pipeIMG.height;
+		pipe.width = (canvas.width/2)/2;
+		// pipe.height = pipeIMG.height/(pipeIMG.width/Math.floor(pipe.width));
+		if(pipe.width>pipeIMG.width/2){
+			pipe.width=pipeIMG.width/2;
+			pipe.height=pipeIMG.height;
+		}
+		pipe.y = canvas.height;
+		pipe.hgap=400;
+		pipe.vgap=pipe.width*1.6;
+		pipe.Case=[canvas.height/4,canvas.height/5,canvas.height/6,canvas.height/7,canvas.height/8,canvas.height/2.6,canvas.height/3];
 		bird.width=Math.floor(canvas.width/2);
-		bird.height=birdIMG.height/(birdIMG.width/Math.floor(canvas.width/2));
+		bird.height=birdIMG.height/(birdIMG.width/Math.floor(bird.width));
 		if(bird.width>birdIMG.width){
 			bird.width=birdIMG.width;
 			bird.height=birdIMG.height;
 		}
-		pipe.width = pipeIMG.width;
-		pipe.height = pipeIMG.height;
-		pipe.y = canvas.height;
-		pipe.gap=canvas.width/3;
 		sky.y=canvas.height-skyIMG.height-landIMG.height;
 		sky.width=skyIMG.width;
 		sky.height=skyIMG.height;
@@ -85,8 +94,8 @@ var bird={ //276x64 -> 3frames
 var sky={
 	x:0,
 	y:0,//canvas.height-skyIMG.height-landIMG.height,
-	vx:-2,//-2,
-	vy:0,
+	vx:-2*speedFactor,//-2,
+	vy:0*speedFactor,
 	width:0,//skyIMG.width,
 	height:0,//skyIMG.height,
 	draw:function(){
@@ -101,20 +110,23 @@ var sky={
 var pipe={
 	x:0,
 	y:0,
-	vx:-1,
-	vy:0,
+	vx:-3*speedFactor,
+	vy:0*speedFactor,
 	width:0,
 	height:0,
-	gap:0,//canvas.width/4,
+	hgap:0,//canvas.width/4,
+	vgap:0,// multiplying factor = 1.6
+	Case:0,
+	CaseUsed:[],
 	draw: function() {
-
-        for(var i=0;i<Math.floor(canvas.width/(pipe.width+this.gap))+2;i++) {
-            // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(pipe.width+this.gap))+2);
-            // console.log(this.gap);
+		// console.log(tmpCase);
+        for(var i=0;i<Math.floor(canvas.width/(pipe.width+this.hgap))+3;i++) {
+            // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(pipe.width+this.hgap))+3);
+            // console.log(this.hgap);
             // console.log(this.y);
             ctx.save();
-            ctx.drawImage(pipeIMG, this.x+this.gap*i, land.y-canvas.height/4, this.width, this.height);
-            ctx.drawImage(pipeIMG, this.x+this.gap*i, land.y-canvas.height/4-100, this.width, -this.height);
+            ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]], this.width, this.height);
+            ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]]-pipe.vgap, this.width, -this.height);
         }
 
 
@@ -124,8 +136,8 @@ var pipe={
 var land={
 	x:0,
 	y:0,//canvas.height-landIMG.height,
-	vx:-4,//-3,
-	vy:0,
+	vx:-4*speedFactor,//-3,
+	vy:0*speedFactor,
 	width:0,//landIMG.width,
 	height:0,//landIMG.height,
 	draw:function(){
@@ -137,15 +149,21 @@ var land={
 function draw(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	sky.draw();
-    pipe.draw();
+    if(started){
+    	pipe.draw();
+		pipe.x+=pipe.vx;
+		if(pipe.x<-(pipe.width)){
+			pipe.x=pipe.hgap-pipe.width;
+			var tmp=pipe.CaseUsed.splice(1);
+			pipe.CaseUsed=tmp.concat(pipe.CaseUsed);
+			// console.log(pipe.CaseUsed);
+		}
+    }
 	sky.x+=sky.vx;
-	pipe.x+=pipe.vx;
     // console.log(pipe.x);
 	if(sky.x<-skyIMG.width+1)
 		sky.x=0;
-	if(pipe.x<-(pipe.gap+pipe.width))
-		pipe.x=0;
-	// console.log(-(pipe.gap+pipe.width));
+	// console.log(-(pipe.hgap+pipe.width));
 	land.draw();
 	land.x+=land.vx;
 	if(land.x<-landIMG.width+1)
@@ -203,9 +221,16 @@ function findY(current,initial){
 }
 canvas.onmousedown=function(){
 	// console.log('clicked');
+	while(pipe.CaseUsed.length<4){
+		var ran=Math.floor(Math.random()*pipe.Case.length);
+		if(!(pipe.CaseUsed.indexOf(ran)+1)){
+			pipe.CaseUsed[pipe.CaseUsed.length]=ran;
+		}
+		// console.log(pipe.CaseUsed);
+	}
 	started=true;
 	// ws.send("TAP");
-	bird.vy=-12;
+	bird.vy=-bird.height*0.2;
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){

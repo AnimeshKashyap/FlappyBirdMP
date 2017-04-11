@@ -37,6 +37,8 @@ function initGame(){
 		pipe.y = canvas.height;
 		pipe.hgap=400;
 		pipe.vgap=pipe.width*1.6;
+		pipe.totalPipes=Math.floor(canvas.width/(pipe.width+pipe.hgap))+3;
+		console.log(pipe.totalPipes);
 		pipe.Case=[canvas.height/4,canvas.height/5,canvas.height/6,canvas.height/7,canvas.height/8,canvas.height/2.6,canvas.height/3];
 		bird.width=Math.floor(canvas.width/2);
 		bird.height=birdIMG.height/(birdIMG.width/Math.floor(bird.width));
@@ -141,10 +143,11 @@ var pipe={
 	vgap:0,// multiplying factor = 1.6
 	Case:0,
 	CaseUsed:[],
+	totalPipes:0,
 	draw: function() {
 		// console.log(tmpCase);
-        for(var i=0;i<Math.floor(canvas.width/(pipe.width+this.hgap))+3;i++) {
-            // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(pipe.width+this.hgap))+3);
+        for(var i=0;i<this.totalPipes;i++) {
+            // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(this.width+this.hgap))+3);
             // console.log(this.hgap);
             // console.log(this.y);
 			this.y=land.y-this.Case[this.CaseUsed[i]];
@@ -255,17 +258,17 @@ function findY(current,initial){
 }
 canvas.onmousedown=function(){
 	// console.log('clicked');
-	while(pipe.CaseUsed.length<4){
-		var ran=Math.floor(Math.random()*pipe.Case.length);
+	while(pipe.CaseUsed.length<pipe.totalPipes){
+		var ran=Math.floor(Math.random()*pipe.totalPipes);
 		if(!(pipe.CaseUsed.indexOf(ran)+1)){
-			pipe.CaseUsed[pipe.CaseUsed.length]=ran;
+			pipe.CaseUsed[pipe.CaseUsed.length]=ran%pipe.Case.length;
 		}
 		// console.log(pipe.CaseUsed);
 	}
 	started=true;
 	// ws.send("TAP");
 	if(speedFactor)
-		bird.vy=-(bird.height*0.185*speedFactor);
+		bird.vy=-(bird.height*0.18*speedFactor);
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){

@@ -23,8 +23,14 @@ function initGame(){
 		skyIMG=document.getElementById("skyIMG");
 		landIMG=document.getElementById("landIMG");
         pipeIMG=document.getElementById("pipeIMG");
-		bird.x=Math.round(canvas.width/8);
+		bird.x=Math.round(canvas.width/10);
 		bird.y=Math.round(canvas.height/2-birdIMG.height);
+		bird.width=Math.floor(canvas.width/2);
+		bird.height=birdIMG.height/(birdIMG.width/Math.floor(bird.width));
+		if(bird.width>birdIMG.width){
+			bird.width=birdIMG.width;
+			bird.height=birdIMG.height;
+		}
 		pipe.x=Math.round(canvas.width);
 		// pipe.width = pipeIMG.width/2;
 		pipe.height = pipeIMG.height;
@@ -35,17 +41,11 @@ function initGame(){
 			pipe.height=pipeIMG.height;
 		}
 		pipe.y = canvas.height;
-		pipe.hgap=400;
+		pipe.hgap=Math.floor(bird.x+(bird.width/bird.totalFrames+pipe.width))+10;//400;
 		pipe.vgap=pipe.width*1.6;
-		pipe.totalPipes=Math.floor(canvas.width/(pipe.width+pipe.hgap))+3;
-		console.log(pipe.totalPipes);
+		pipe.totalPipes=Math.floor(canvas.width/(pipe.width+pipe.hgap))+3;//means 2 extra pipes (off screen for randomisation)
+		// console.log(pipe.totalPipes);
 		pipe.Case=[canvas.height/4,canvas.height/5,canvas.height/6,canvas.height/7,canvas.height/8,canvas.height/2.6,canvas.height/3];
-		bird.width=Math.floor(canvas.width/2);
-		bird.height=birdIMG.height/(birdIMG.width/Math.floor(bird.width));
-		if(bird.width>birdIMG.width){
-			bird.width=birdIMG.width;
-			bird.height=birdIMG.height;
-		}
 		sky.y=canvas.height-skyIMG.height-landIMG.height;
 		sky.width=skyIMG.width;
 		sky.height=skyIMG.height;
@@ -88,7 +88,6 @@ var bird={ //276x64 -> 3frames
 		ctx.translate(this.width/(3*this.totalFrames),2*this.height/3);
 		// var angle=((Math.PI/2)/25)*Math.floor(this.vy);
 		var angle=((Math.PI/2)/30)*this.vy;
-		ctx.rotate(angle);
 		// ROTATION ANGLE IN DEGREES -> console.log(((180/2)/25)*this.vy);
 		// ROTATION ANGLE IN RADIANS -> console.log(((Math.PI/2)/25)*this.vy);
 		// console.log(bird.vy);
@@ -104,9 +103,17 @@ var bird={ //276x64 -> 3frames
 			this.heightForCollision=Math.floor(bird.height*Math.cos(angle)+(bird.width/bird.totalFrames)*Math.sin(angle));
 			this.widthForCollision=Math.floor(bird.height*Math.sin(angle)+(bird.width/bird.totalFrames)*Math.cos(angle));
 		}
+		//RECTANGLE FOR COLLISION SQUARE
+		ctx.strokeStyle="#000000";
+		ctx.strokeRect(-(bird.width/bird.totalFrames)/3+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2,-(2*bird.height)/3+bird.height/2-bird.heightForCollision/2,bird.widthForCollision,bird.heightForCollision);
+		ctx.strokeStyle="#FF0000";
+		ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,2,2);
+		ctx.rotate(angle);
 		// console.log("ANGLE: "+Math.floor((angle*180)/Math.PI)+" WIDTH: "+this.widthForCollision+" HEIGHT: "+this.heightForCollision);
 		// ctx.strokeRect(0,0+sineOffset,this.width/this.totalFrames,this.height);
 		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*3),-2*this.height/3+sineOffset,this.width/this.totalFrames,this.height);
+		ctx.strokeStyle="#000000";
+		ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,bird.width/bird.totalFrames,bird.height);
 		if(speedFactor){
 			this.frame+=1;
 			this.frame%=(this.totalFrames-1)*4;
@@ -153,6 +160,10 @@ var pipe={
 			this.y=land.y-this.Case[this.CaseUsed[i]];
             ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y, this.width, this.height);
             ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y-pipe.vgap, this.width, -this.height);
+            // RECTANGLE FOR COLLISION BOUNDARIES
+			ctx.strokeStyle="#FF0000";
+			ctx.strokeRect(this.x+this.hgap*i,this.y,this.width,this.height);
+			ctx.strokeRect(this.x+this.hgap*i,this.y-this.vgap-this.height,this.width,this.height);
         }
         this.y=land.y-this.Case[this.CaseUsed[0]];
     }
@@ -179,8 +190,8 @@ function draw(){
 		pipe.x+=(pipe.vx*speedFactor);
 		if(pipe.x<-(pipe.width)){
 			pipe.x=pipe.hgap-pipe.width;
-			var tmp=pipe.CaseUsed.splice(1);
-			pipe.CaseUsed=tmp.concat(pipe.CaseUsed);
+			pipe.CaseUsed=pipe.CaseUsed.splice(1);
+			// pipe.CaseUsed=tmp.concat(pipe.CaseUsed);
 			// console.log(pipe.CaseUsed);
 		}
     }
@@ -202,12 +213,28 @@ function draw(){
 		bird.vy+=0.5;
 		// console.log("if(bird.x("+bird.x+")>pipe.x("+pipe.x+")&&bird.x("+bird.x+")+bird.width("+bird.width+")<pipe.x("+pipe.x+")+pipe.width("+pipe.width+"))")
 		// console.log("bird.y("+bird.y+")+bird.heightForCollision("+bird.heightForCollision+")-10>pipe.y("+pipe.y+")");
-		if( speedFactor&&
-			((bird.x+bird.widthForCollision-30>pipe.x&&bird.x+30<pipe.x+pipe.width&&
+		/*if( speedFactor&&
+			((bird.x+bird.widthForCollision-10>pipe.x&&bird.x+30<pipe.x+pipe.width&&
 									(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap))
 			||bird.y+bird.height>land.y)
 			){
 			// console.log("BirdOnPipe");
+			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
+			speedFactor=0;
+			bird.frame=4*(bird.totalFrames-1);
+			bird.vy=0;
+		}*/
+		// NEW COLLISION WITH PBP-HHB-SCT
+		ctx.strokeStyle="#0000FF";
+		ctx.strokeRect(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2,bird.y+bird.height/2-bird.heightForCollision/2,2,2);
+		if( speedFactor&&
+			((bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2>pipe.x&&bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2<pipe.x+pipe.width&&
+			(bird.y+bird.height/2+bird.heightForCollision/2>pipe.y||bird.y+bird.height/2-bird.heightForCollision/2<pipe.y-pipe.vgap))
+			||0/*bird.y+bird.height>land.y*/)
+			){
+			// console.log("BirdOnPipe");
+			if(speedFactor)
+				console.log("PIPE.X: "+pipe.x+" PIPE.Y: "+pipe.y+" PIPE.VGAP: "+pipe.vgap+"\nBIRD.X: "+bird.x+" BIRD.Y: "+bird.y+" BIRD.WIDTHFORCOLLISION: "+bird.widthForCollision+ " BIRD.HEIGHTFORCOLLISION: "+bird.heightForCollision+"\nCONDITIONS:\n"+(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2)+">"+(pipe.x)+"&&"+(bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2)+"<"+(pipe.x+pipe.width)+"&&"+"("+(bird.y+bird.height/2+bird.heightForCollision/2)+">"+(pipe.y)+"||"+(bird.y+bird.height/2-bird.heightForCollision/2)+"<"+(pipe.y-pipe.vgap)+")");
 			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
 			speedFactor=0;
 			bird.frame=4*(bird.totalFrames-1);
@@ -260,15 +287,16 @@ canvas.onmousedown=function(){
 	// console.log('clicked');
 	while(pipe.CaseUsed.length<pipe.totalPipes){
 		var ran=Math.floor(Math.random()*pipe.totalPipes);
-		if(!(pipe.CaseUsed.indexOf(ran)+1)){
+		if(pipe.CaseUsed.indexOf(ran)!=pipe.CaseUsed[pipe.CaseUsed.length-1]){
 			pipe.CaseUsed[pipe.CaseUsed.length]=ran%pipe.Case.length;
+			// console.log("calledAgain!");
 		}
 		// console.log(pipe.CaseUsed);
 	}
 	started=true;
 	// ws.send("TAP");
 	if(speedFactor)
-		bird.vy=-(bird.height*0.18*speedFactor);
+		bird.vy=-(pipe.vgap/80)*pipe.vgap/bird.height;//-pipe.vgap/20;//-(bird.height*0.17*speedFactor);
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){

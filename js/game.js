@@ -7,10 +7,7 @@ var landIMG=  //336x112*/
 var raf;
 var started=false;
 var speedFactor=1;
-<<<<<<< HEAD
 var collisionStatus=false;
-=======
->>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 
 function initGame(){
 	windowSize=document.getElementById("windowSize");

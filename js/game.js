@@ -1,4 +1,4 @@
- var canvas=document.getElementById("canvas");
+var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext('2d');
 var initialMsec=new Date().getMilliseconds();
 /*var birdIMG=  
@@ -7,6 +7,10 @@ var landIMG=  //336x112*/
 var raf;
 var started=false;
 var speedFactor=1;
+<<<<<<< HEAD
+var collisionStatus=false;
+=======
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 
 function initGame(){
 	windowSize=document.getElementById("windowSize");
@@ -63,12 +67,14 @@ var bird={ //276x64 -> 3frames
 	vy:0,
 	width:0,
 	height:0,
+	heightForCollision:0,
+	widthForCollision:0,
 	draw:function(){
 		ctx.save();
 		var sineOffset=0;
 		// console.log(this.height);
-		var msec=new Date().getMilliseconds();
 		if(!started){
+			var msec=new Date().getMilliseconds();
 			sineOffset=(-1*Math.sin(((2*Math.PI)/1000)*findY(msec,initialMsec))*20);
 		}
 		// console.log("BIRD");
@@ -80,10 +86,32 @@ var bird={ //276x64 -> 3frames
 		ctx.arc(0,0,1,0,2*Math.PI);
 		ctx.fill();
 		ctx.restore();*/
-		ctx.translate(this.width/(2*this.totalFrames),this.height/2);
-		ctx.rotate(((Math.PI/2)/25)*this.vy);
+		ctx.translate(this.width/(3*this.totalFrames),2*this.height/3);
+		// var angle=((Math.PI/2)/25)*Math.floor(this.vy);
+		var angle=((Math.PI/2)/30)*this.vy;
+		ctx.rotate(angle);
+		// ROTATION ANGLE IN DEGREES -> console.log(((180/2)/25)*this.vy);
+		// ROTATION ANGLE IN RADIANS -> console.log(((Math.PI/2)/25)*this.vy);
+		// console.log(bird.vy);
+		if(bird.vy<0){
+			// GOING UP -> ANGLE IS NEGATIVE -> BOTTOM HALF 90 - ANGLE -> TOP HALF 
+			// console.log(  bird.width*Math.cos(((Math.PI/2)/25)*this.vy)/bird.totalFrames  +  bird.height*Math.cos(((Math.PI/2)/25)*this.vy)/bird.totalFrames  );
+			this.heightForCollision=Math.floor((bird.width/bird.totalFrames)*Math.sin(-angle)+bird.height*Math.cos(-angle));
+			this.widthForCollision=Math.floor((bird.width/bird.totalFrames)*Math.cos(-angle)+bird.height*Math.sin(-angle));
+		}
+		else{
+			// GOING DOWN -> ANGLE IS POSITIVE
+			// console.log(  bird.width*Math.cos(((Math.PI/2)/25)*this.vy)/bird.totalFrames  +  bird.height*Math.cos(((Math.PI/2)/25)*this.vy)/bird.totalFrames  );
+			this.heightForCollision=Math.floor(bird.height*Math.cos(angle)+(bird.width/bird.totalFrames)*Math.sin(angle));
+			this.widthForCollision=Math.floor(bird.height*Math.sin(angle)+(bird.width/bird.totalFrames)*Math.cos(angle));
+		}
+		// console.log("ANGLE: "+Math.floor((angle*180)/Math.PI)+" WIDTH: "+this.widthForCollision+" HEIGHT: "+this.heightForCollision);
 		// ctx.strokeRect(0,0+sineOffset,this.width/this.totalFrames,this.height);
+<<<<<<< HEAD
+		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*3),-2*this.height/3+sineOffset,this.width/this.totalFrames,this.height);
+=======
 		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*2),-this.height/2+sineOffset,this.width/this.totalFrames,this.height);
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 		this.frame+=1;
 		this.frame%=this.totalFrames*4;
 		ctx.restore();
@@ -110,8 +138,13 @@ var sky={
 var pipe={
 	x:0,
 	y:0,
+<<<<<<< HEAD
+	vx:-3,
+	vy:0,
+=======
 	vx:-3*speedFactor,
 	vy:0*speedFactor,
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 	width:0,
 	height:0,
 	hgap:0,//canvas.width/4,
@@ -124,11 +157,20 @@ var pipe={
             // NUMBER OF PIPES -> console.log(Math.floor(canvas.width/(pipe.width+this.hgap))+3);
             // console.log(this.hgap);
             // console.log(this.y);
+<<<<<<< HEAD
+			this.y=land.y-this.Case[this.CaseUsed[i]];
+            ctx.save();
+            ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y, this.width, this.height);
+            ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y-pipe.vgap, this.width, -this.height);
+        }
+        this.y=this.y=land.y-this.Case[this.CaseUsed[0]];
+=======
             ctx.save();
             ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]], this.width, this.height);
             ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]]-pipe.vgap, this.width, -this.height);
         }
 
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 
     }
 }
@@ -136,8 +178,13 @@ var pipe={
 var land={
 	x:0,
 	y:0,//canvas.height-landIMG.height,
+<<<<<<< HEAD
+	vx:-4,//-3,
+	vy:0,
+=======
 	vx:-4*speedFactor,//-3,
 	vy:0*speedFactor,
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 	width:0,//landIMG.width,
 	height:0,//landIMG.height,
 	draw:function(){
@@ -151,7 +198,11 @@ function draw(){
 	sky.draw();
     if(started){
     	pipe.draw();
+<<<<<<< HEAD
+		pipe.x+=(pipe.vx*speedFactor);
+=======
 		pipe.x+=pipe.vx;
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 		if(pipe.x<-(pipe.width)){
 			pipe.x=pipe.hgap-pipe.width;
 			var tmp=pipe.CaseUsed.splice(1);
@@ -159,13 +210,17 @@ function draw(){
 			// console.log(pipe.CaseUsed);
 		}
     }
+<<<<<<< HEAD
+	sky.x+=(sky.vx*speedFactor);
+=======
 	sky.x+=sky.vx;
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
     // console.log(pipe.x);
 	if(sky.x<-skyIMG.width+1)
 		sky.x=0;
 	// console.log(-(pipe.hgap+pipe.width));
 	land.draw();
-	land.x+=land.vx;
+	land.x+=(land.vx*speedFactor);
 	if(land.x<-landIMG.width+1)
 		land.x=0;
 
@@ -175,6 +230,18 @@ function draw(){
 		bird.y+=bird.vy;
 		bird.vy*=0.99;
 		bird.vy+=0.5;
+<<<<<<< HEAD
+		// console.log("if(bird.x("+bird.x+")>pipe.x("+pipe.x+")&&bird.x("+bird.x+")+bird.width("+bird.width+")<pipe.x("+pipe.x+")+pipe.width("+pipe.width+"))")
+		// console.log("bird.y("+bird.y+")+bird.heightForCollision("+bird.heightForCollision+")-10>pipe.y("+pipe.y+")");
+		if(
+			bird.x+bird.widthForCollision-30>pipe.x&&bird.x+30<pipe.x+pipe.width&&
+			(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap)){
+			console.log("BirdOnPipe");
+			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
+			speedFactor=0;
+		}
+=======
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 
 	}
 	else{
@@ -230,7 +297,11 @@ canvas.onmousedown=function(){
 	}
 	started=true;
 	// ws.send("TAP");
+<<<<<<< HEAD
+	bird.vy=-bird.height*0.18;
+=======
 	bird.vy=-bird.height*0.2;
+>>>>>>> 412f00c8d802b2083737923f48530148f5a65478
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){

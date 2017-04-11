@@ -1,4 +1,4 @@
- var canvas=document.getElementById("canvas");
+var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext('2d');
 var initialMsec=new Date().getMilliseconds();
 /*var birdIMG=  
@@ -146,11 +146,15 @@ var pipe={
             // console.log(this.hgap);
             // console.log(this.y);
 			this.y=land.y-this.Case[this.CaseUsed[i]];
+            ctx.save();
             ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y, this.width, this.height);
             ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y-pipe.vgap, this.width, -this.height);
         }
-        this.y=land.y-this.Case[this.CaseUsed[0]];
-    }
+        this.y=this.y=land.y-this.Case[this.CaseUsed[0]];
+            ctx.save();
+            ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]], this.width, this.height);
+            ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, land.y-this.Case[this.CaseUsed[i]]-pipe.vgap, this.width, -this.height);
+        }
 }
 
 var land={
@@ -158,6 +162,8 @@ var land={
 	y:0,//canvas.height-landIMG.height,
 	vx:-4,//-3,
 	vy:0,
+	vx:-4*speedFactor,//-3,
+	vy:0*speedFactor,
 	width:0,//landIMG.width,
 	height:0,//landIMG.height,
 	draw:function(){
@@ -185,7 +191,7 @@ function draw(){
 		sky.x=0;
 	// console.log(-(pipe.hgap+pipe.width));
 	land.draw();
-	land.x+=land.vx;
+	land.x+=(land.vx*speedFactor);
 	if(land.x<-landIMG.width+1)
 		land.x=0;
 

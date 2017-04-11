@@ -59,7 +59,7 @@ var bird={ //276x64 -> 3frames
 	x:0,//Math.round(canvas.width/8),
 	y:0,//Math.round(canvas.height/2-birdIMG.height),
 	frame:0,
-	totalFrames:3,
+	totalFrames:4,
 	vx:0,
 	vy:0,
 	width:0,
@@ -105,8 +105,10 @@ var bird={ //276x64 -> 3frames
 		// console.log("ANGLE: "+Math.floor((angle*180)/Math.PI)+" WIDTH: "+this.widthForCollision+" HEIGHT: "+this.heightForCollision);
 		// ctx.strokeRect(0,0+sineOffset,this.width/this.totalFrames,this.height);
 		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*3),-2*this.height/3+sineOffset,this.width/this.totalFrames,this.height);
-		this.frame+=1;
-		this.frame%=this.totalFrames*4;
+		if(speedFactor){
+			this.frame+=1;
+			this.frame%=(this.totalFrames-1)*4;
+		}
 		ctx.restore();
 		/*ctx.fillStyle='black';
 		ctx.fillRect(0,0,200,200);*/
@@ -185,7 +187,7 @@ function draw(){
 		sky.x=0;
 	// console.log(-(pipe.hgap+pipe.width));
 	land.draw();
-	land.x+=land.vx;
+	land.x+=(land.vx*speedFactor);
 	if(land.x<-landIMG.width+1)
 		land.x=0;
 
@@ -197,12 +199,16 @@ function draw(){
 		bird.vy+=0.5;
 		// console.log("if(bird.x("+bird.x+")>pipe.x("+pipe.x+")&&bird.x("+bird.x+")+bird.width("+bird.width+")<pipe.x("+pipe.x+")+pipe.width("+pipe.width+"))")
 		// console.log("bird.y("+bird.y+")+bird.heightForCollision("+bird.heightForCollision+")-10>pipe.y("+pipe.y+")");
-		if(
-			bird.x+bird.widthForCollision-30>pipe.x&&bird.x+30<pipe.x+pipe.width&&
-			(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap)){
+		if( speedFactor&&
+			((bird.x+bird.widthForCollision-30>pipe.x&&bird.x+30<pipe.x+pipe.width&&
+									(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap))
+			||bird.y+bird.height>land.y)
+			){
 			// console.log("BirdOnPipe");
 			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
 			speedFactor=0;
+			bird.frame=4*(bird.totalFrames-1);
+			bird.vy=0;
 		}
 	}
 	else{
@@ -258,7 +264,8 @@ canvas.onmousedown=function(){
 	}
 	started=true;
 	// ws.send("TAP");
-	bird.vy=-bird.height*0.18;
+	if(speedFactor)
+		bird.vy=-(bird.height*0.185*speedFactor);
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){

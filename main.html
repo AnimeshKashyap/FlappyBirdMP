@@ -59,8 +59,9 @@
       <img id="birdIMG3" src="res/images/bird3b.png">
       <img id="birdIMG4" src="res/images/bird4b.png">
       <img id="skyIMG" src="res/images/sky.png">
-      <img id="landIMG" src="res/images/land.png">
+      <img id="landIMG" src="res/images/land2.png">
       <img id="pipeIMG" src="res/images/Pipes-with-flipped2.png">
+      <img id="gameOverIMG" src="res/images/GameOver.png">
       <!-- <img style="transform: scale(2,-1)" id="pipeIMG" src="res/images/Pipes-with-flipped.png"> -->
     </div>
     <div id="notSupported" class="hide">LANDSCAPE MODE IS NOT SUPPORTED ON THIS RESOLUTION</div>
@@ -69,7 +70,12 @@
     <script type="text/javascript" src="js/ui.js"></script>
     <script type="text/javascript" src="js/game.js"></script>
     <script type="text/javascript">
-      setTimeout(function(){initGame()},50);
+      // if(isMobile){
+        setTimeout(function(){initGame()},100);
+      // }
+      // else{
+        // setTimeout(function(){initUI()},100);
+      // }
     </script>
 
   </body>

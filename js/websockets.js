@@ -43,8 +43,22 @@ function WebSocketTest()
          console.log(evt);
          var received_msg = evt.data;
          if(received_msg=="TAP"){
-         	started=true;
-         	bird.vy=-12;
+            gameStatus=1;
+            canvas.onmousedown();
+         }
+         else
+         if(received_msg=="SCORED"){
+         	score+=1;
+         }
+         else
+         if(received_msg=="OUT"){
+            gameStatus=2;
+         }
+         else
+         if(received_msg=="RESTART"){
+            window.cancelAnimationFrame(raf);
+            gameStatus=0;
+            initGame(1);
          }
       };
 	

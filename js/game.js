@@ -1,30 +1,41 @@
- var canvas=document.getElementById("canvas");
+var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext('2d');
 var initialMsec=new Date().getMilliseconds();
 /*var birdIMG=  
 var skyIMG=  //276x109
 var landIMG=  //336x112*/
 var raf;
-var started=false;
-var speedFactor=1;
+var gameStatus=0;//0->NotStarted 1->Playing, 2-> GameOver
+var speedFactor=10;
 var collisionStatus=false;
+var debugMode=0; //0->False,1->CollisionV1,2->CollisionV2
+var mouseClickable=null;
+var score=0;
+var added=false;
 
-function initGame(){
+function initGame(restarted){
 	windowSize=document.getElementById("windowSize");
 	if(windowSize.offsetHeight<500){
 		canvas.classList.toggle("hide");
 		document.getElementById("notSupported").classList.toggle("hide");
 	}
 	else{
-		// WebSocketTest();
+		score=0;
+		speedFactor=1;
+		gameStatus=0;
+		added=false;
+		if(!restarted)
+			WebSocketTest();
 		canvas.height=windowSize.offsetHeight;
 		canvas.width=windowSize.offsetWidth;
 		birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
 		skyIMG=document.getElementById("skyIMG");
 		landIMG=document.getElementById("landIMG");
         pipeIMG=document.getElementById("pipeIMG");
+        gameOverIMG=document.getElementById("gameOverIMG");
 		bird.x=Math.round(canvas.width/10);
 		bird.y=Math.round(canvas.height/2-birdIMG.height);
+		bird.frame=0;
 		bird.width=Math.floor(canvas.width/2);
 		bird.height=birdIMG.height/(birdIMG.width/Math.floor(bird.width));
 		if(bird.width>birdIMG.width){
@@ -72,7 +83,7 @@ var bird={ //276x64 -> 3frames
 		ctx.save();
 		var sineOffset=0;
 		// console.log(this.height);
-		if(!started){
+		if(!gameStatus||isMobile){
 			var msec=new Date().getMilliseconds();
 			sineOffset=(-1*Math.sin(((2*Math.PI)/1000)*findY(msec,initialMsec))*20);
 		}
@@ -104,16 +115,30 @@ var bird={ //276x64 -> 3frames
 			this.widthForCollision=Math.floor(bird.height*Math.sin(angle)+(bird.width/bird.totalFrames)*Math.cos(angle));
 		}
 		//RECTANGLE FOR COLLISION SQUARE
-		ctx.strokeStyle="#000000";
-		ctx.strokeRect(-(bird.width/bird.totalFrames)/3+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2,-(2*bird.height)/3+bird.height/2-bird.heightForCollision/2,bird.widthForCollision,bird.heightForCollision);
-		ctx.strokeStyle="#FF0000";
-		ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,2,2);
+		if(debugMode==1){
+			ctx.strokeStyle="#000000";
+			ctx.strokeRect(-(bird.width/bird.totalFrames)/3+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2,-(2*bird.height)/3+bird.height/2-bird.heightForCollision/2,bird.widthForCollision,bird.heightForCollision);
+			ctx.strokeStyle="#FF0000";
+			ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,2,2);
+		}
+
 		ctx.rotate(angle);
+		
+		if(debugMode==2){
+			ctx.beginPath();
+			ctx.ellipse(-(bird.width/bird.totalFrames)/3+(bird.width/bird.totalFrames)/2,-2*bird.height/3+bird.height/2,bird.width/(2*bird.totalFrames),bird.height/2,0,0,2*Math.PI);
+			ctx.stroke();
+			ctx.strokeStyle="#FF0000";
+			ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,2,2);
+		}
+
 		// console.log("ANGLE: "+Math.floor((angle*180)/Math.PI)+" WIDTH: "+this.widthForCollision+" HEIGHT: "+this.heightForCollision);
 		// ctx.strokeRect(0,0+sineOffset,this.width/this.totalFrames,this.height);
 		ctx.drawImage(birdIMG,(birdIMG.width/this.totalFrames)*Math.floor(this.frame/4),0,birdIMG.width/this.totalFrames,birdIMG.height,-this.width/(this.totalFrames*3),-2*this.height/3+sineOffset,this.width/this.totalFrames,this.height);
-		ctx.strokeStyle="#000000";
-		ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,bird.width/bird.totalFrames,bird.height);
+		if(debugMode==1){
+			ctx.strokeStyle="#000000";
+			ctx.strokeRect(-(bird.width/bird.totalFrames)/3,-(2*bird.height)/3,bird.width/bird.totalFrames,bird.height);
+		}
 		if(speedFactor){
 			this.frame+=1;
 			this.frame%=(this.totalFrames-1)*4;
@@ -121,13 +146,14 @@ var bird={ //276x64 -> 3frames
 		ctx.restore();
 		/*ctx.fillStyle='black';
 		ctx.fillRect(0,0,200,200);*/
+		return angle;
 	}
 }
 var sky={
 	x:0,
 	y:0,//canvas.height-skyIMG.height-landIMG.height,
-	vx:-2*speedFactor,//-2,
-	vy:0*speedFactor,
+	vx:-2,//-2,
+	vy:0,
 	width:0,//skyIMG.width,
 	height:0,//skyIMG.height,
 	draw:function(){
@@ -161,9 +187,11 @@ var pipe={
             ctx.drawImage(pipeIMG, 0, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y, this.width, this.height);
             ctx.drawImage(pipeIMG, pipeIMG.width/2, 0, pipeIMG.width/2, pipeIMG.height, this.x+this.hgap*i, this.y-pipe.vgap, this.width, -this.height);
             // RECTANGLE FOR COLLISION BOUNDARIES
-			ctx.strokeStyle="#FF0000";
-			ctx.strokeRect(this.x+this.hgap*i,this.y,this.width,this.height);
-			ctx.strokeRect(this.x+this.hgap*i,this.y-this.vgap-this.height,this.width,this.height);
+            if(debugMode){
+				ctx.strokeStyle="#FF0000";
+				ctx.strokeRect(this.x+this.hgap*i,this.y,this.width,this.height);
+				ctx.strokeRect(this.x+this.hgap*i,this.y-this.vgap-this.height,this.width,this.height);
+			}
         }
         this.y=land.y-this.Case[this.CaseUsed[0]];
     }
@@ -185,60 +213,125 @@ var land={
 function draw(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	sky.draw();
-    if(started){
-    	pipe.draw();
-		pipe.x+=(pipe.vx*speedFactor);
-		if(pipe.x<-(pipe.width)){
-			pipe.x=pipe.hgap-pipe.width;
-			pipe.CaseUsed=pipe.CaseUsed.splice(1);
-			// pipe.CaseUsed=tmp.concat(pipe.CaseUsed);
-			// console.log(pipe.CaseUsed);
-		}
-    }
 	sky.x+=(sky.vx*speedFactor);
     // console.log(pipe.x);
 	if(sky.x<-skyIMG.width+1)
 		sky.x=0;
 	// console.log(-(pipe.hgap+pipe.width));
+	if(gameStatus&&!isMobile){
+		pipe.draw();
+		pipe.x+=(pipe.vx*speedFactor);
+		// console.log(speedFactor);
+		if(pipe.x<-(pipe.width)){
+			pipe.x=pipe.hgap-pipe.width;
+			pipe.CaseUsed=pipe.CaseUsed.splice(1);
+			added=false;
+			// pipe.CaseUsed=tmp.concat(pipe.CaseUsed);
+			// console.log(pipe.CaseUsed);
+		}
+	}
 	land.draw();
 	land.x+=(land.vx*speedFactor);
 	if(land.x<-landIMG.width+1)
 		land.x=0;
 
 
-	bird.draw();
-	if(started){
-		bird.y+=bird.vy;
-		bird.vy*=0.99;
-		bird.vy+=0.5;
-		// console.log("if(bird.x("+bird.x+")>pipe.x("+pipe.x+")&&bird.x("+bird.x+")+bird.width("+bird.width+")<pipe.x("+pipe.x+")+pipe.width("+pipe.width+"))")
-		// console.log("bird.y("+bird.y+")+bird.heightForCollision("+bird.heightForCollision+")-10>pipe.y("+pipe.y+")");
-		/*if( speedFactor&&
-			((bird.x+bird.widthForCollision-10>pipe.x&&bird.x+30<pipe.x+pipe.width&&
-									(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap))
-			||bird.y+bird.height>land.y)
-			){
-			// console.log("BirdOnPipe");
-			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
-			speedFactor=0;
-			bird.frame=4*(bird.totalFrames-1);
-			bird.vy=0;
-		}*/
-		// NEW COLLISION WITH PBP-HHB-SCT
-		ctx.strokeStyle="#0000FF";
-		ctx.strokeRect(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2,bird.y+bird.height/2-bird.heightForCollision/2,2,2);
-		if( speedFactor&&
-			((bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2>pipe.x&&bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2<pipe.x+pipe.width&&
-			(bird.y+bird.height/2+bird.heightForCollision/2>pipe.y||bird.y+bird.height/2-bird.heightForCollision/2<pipe.y-pipe.vgap))
-			||0/*bird.y+bird.height>land.y*/)
-			){
-			// console.log("BirdOnPipe");
-			if(speedFactor)
-				console.log("PIPE.X: "+pipe.x+" PIPE.Y: "+pipe.y+" PIPE.VGAP: "+pipe.vgap+"\nBIRD.X: "+bird.x+" BIRD.Y: "+bird.y+" BIRD.WIDTHFORCOLLISION: "+bird.widthForCollision+ " BIRD.HEIGHTFORCOLLISION: "+bird.heightForCollision+"\nCONDITIONS:\n"+(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2)+">"+(pipe.x)+"&&"+(bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2)+"<"+(pipe.x+pipe.width)+"&&"+"("+(bird.y+bird.height/2+bird.heightForCollision/2)+">"+(pipe.y)+"||"+(bird.y+bird.height/2-bird.heightForCollision/2)+"<"+(pipe.y-pipe.vgap)+")");
-			// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
-			speedFactor=0;
-			bird.frame=4*(bird.totalFrames-1);
-			bird.vy=0;
+    if(gameStatus){
+    	if(!isMobile){
+			var angle=bird.draw();
+			bird.y+=bird.vy;
+			bird.vy*=0.99;
+			bird.vy+=0.5;
+			// console.log("if(bird.x("+bird.x+")>pipe.x("+pipe.x+")&&bird.x("+bird.x+")+bird.width("+bird.width+")<pipe.x("+pipe.x+")+pipe.width("+pipe.width+"))")
+			// console.log("bird.y("+bird.y+")+bird.heightForCollision("+bird.heightForCollision+")-10>pipe.y("+pipe.y+")");
+			/*if( speedFactor&&
+				((bird.x+bird.widthForCollision-10>pipe.x&&bird.x+30<pipe.x+pipe.width&&
+										(bird.y+bird.heightForCollision-30>pipe.y||bird.y<pipe.y-pipe.vgap))
+				||bird.y+bird.height>land.y)
+				){
+				// console.log("BirdOnPipe");
+				// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
+				speedFactor=0;
+				bird.frame=4*(bird.totalFrames-1);
+				bird.vy=0;
+			}*/
+			// NEW COLLISION WITH PBP-HHB-SCT USING WIDTH-FOR-COLLISION AND HEIGHT-FOR COLLSIION VALUES FOR BETTER RESULTS!
+			if(debugMode==1){
+				ctx.strokeStyle="#0000FF";
+				ctx.strokeRect(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2,bird.y+bird.height/2-bird.heightForCollision/2,2,2);
+			}
+			if( speedFactor&&
+				((bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2-20>pipe.x&&bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2+20<pipe.x+pipe.width&&
+				(bird.y+bird.height/2+bird.heightForCollision/2-15>pipe.y||bird.y+bird.height/2-bird.heightForCollision/2+15<pipe.y-pipe.vgap))
+				||bird.y+bird.height>land.y)
+				){
+				// console.log("BirdOnPipe");
+				// if(speedFactor)
+					// console.log("PIPE.X: "+pipe.x+" PIPE.Y: "+pipe.y+" PIPE.VGAP: "+pipe.vgap+"\nBIRD.X: "+bird.x+" BIRD.Y: "+bird.y+" BIRD.WIDTHFORCOLLISION: "+bird.widthForCollision+ " BIRD.HEIGHTFORCOLLISION: "+bird.heightForCollision+"\nCONDITIONS:\n"+(bird.x+bird.width/(2*bird.totalFrames)+bird.widthForCollision/2)+">"+(pipe.x)+"&&"+(bird.x+bird.width/(2*bird.totalFrames)-bird.widthForCollision/2)+"<"+(pipe.x+pipe.width)+"&&"+"("+(bird.y+bird.height/2+bird.heightForCollision/2)+">"+(pipe.y)+"||"+(bird.y+bird.height/2-bird.heightForCollision/2)+"<"+(pipe.y-pipe.vgap)+")");
+				// birdIMG=document.getElementById("birdIMG"+(Math.floor(Math.random()*4)+1));
+				speedFactor=0;
+				bird.frame=4*(bird.totalFrames-1);
+				bird.vy=0;
+				gameStatus=2;
+				ws.send("OUT");
+			}
+			// COLLISION WITH ELLIPSE SHAPE COLLIDER
+			// console.log("STARTING: "+checkCollisionWithEllipse(pipe.x,pipe.y,angle)+" \nENDING: "+checkCollisionWithEllipse(pipe.x,land.y,angle));
+			/*if(bird.x+bird.width/bird.totalFrames>pipe.x){
+				var tmp=checkCollisionWithEllipse(pipe.x,pipe.y,angle);
+				// console.log(tmp);
+				var tmp2=checkCollisionWithEllipse(pipe.x,land.y-pipe.y,angle);
+				// console.log(tmp2);
+				if(tmp<1){
+					speedFactor=0;
+					console.log(pipe.x,pipe.y,angle);
+				}
+				else
+				if(tmp2<1){
+					speedFactor=0;
+					console.log(pipe.x,pipe.y,angle);
+				}
+			}*/
+
+			//CALCULATE SCORE:
+			if(bird.x>pipe.x+pipe.width&&!added){
+				score+=1;
+				ws.send("SCORED");
+				// console.log(score);
+				added=true
+			}
+			//WHEN PLAYER IS DOWN
+			if(gameStatus==2){
+				var startx=canvas.width/2-canvas.width/6;
+				var starty=canvas.height/10;
+				var tmpWidth=canvas.width/2.5;
+				if(tmpWidth>gameOverIMG.width-60){
+					tmpWidth=gameOverIMG.width-60;
+					// tmpHeight=gameOverIMG.height;
+				}
+				var tmpHeight=(gameOverIMG.height/gameOverIMG.width)*tmpWidth;
+				ctx.drawImage(gameOverIMG,startx,starty,tmpWidth,tmpHeight);//canvas.width/3,(gameOverIMG.height/gameOverIMG.width)*canvas.width/3);
+				startx=2*canvas.width/10;
+				starty=starty+tmpHeight+45
+				ctx.fillStyle="#000000";
+				// ctx.fillRect(startx-3,starty-3,(6*canvas.width)/10+6,canvas.height-starty-canvas.height/10);
+				ctx.fillStyle="#DFD78F";//"#efc95e";
+				// ctx.fillRect(startx,starty,(6*canvas.width)/10,canvas.height-starty-canvas.height/10-6);
+				createTextWithoutBG("SCORE: "+score,canvas.width/2,4*canvas.height/8,canvas.height/8,'white',1);
+				mouseClickable=createTextWithBG("RESTART",canvas.width/2,3*canvas.height/4,canvas.height/8,'white',1);
+				// console.log("calledAgain");
+			}
+		}
+		else{
+			bird.draw();
+			var fontSize=Math.round(canvas.height/12);
+			if(gameStatus==1){
+				createTextWithoutBG("SCORE:"+score,canvas.width/2,canvas.height/2,fontSize,'white',1)
+			}
+			else{
+				createTextWithoutBG("SCORE:"+score,canvas.width/2,canvas.height/2,fontSize,'white',1)
+				mouseClickable=createTextWithBG("RESTART",canvas.width/2,2*canvas.height/3,fontSize,'white',1)	
+			}
 		}
 	}
 	else{
@@ -283,20 +376,41 @@ function findY(current,initial){
     var tmp=(((current-initial)<0)?1000+current-initial:current-initial);
     return tmp;
 }
-canvas.onmousedown=function(){
+canvas.onmousedown=function(evt){
 	// console.log('clicked');
-	while(pipe.CaseUsed.length<pipe.totalPipes){
-		var ran=Math.floor(Math.random()*pipe.totalPipes);
-		if(pipe.CaseUsed.indexOf(ran)!=pipe.CaseUsed[pipe.CaseUsed.length-1]){
-			pipe.CaseUsed[pipe.CaseUsed.length]=ran%pipe.Case.length;
-			// console.log("calledAgain!");
+	if(gameStatus==2){
+		// console.log(evt);
+		if(evt.clientX>=mouseClickable[0]&&evt.clientX<=mouseClickable[0]+mouseClickable[2]&&evt.clientY>=mouseClickable[1]&&evt.clientY<=mouseClickable[1]+mouseClickable[3]){
+			window.cancelAnimationFrame(raf);
+			gameStatus=0;
+			initGame(1);
+			if(isMobile){
+				ws.send("RESTART");
+			}
+			return;
 		}
-		// console.log(pipe.CaseUsed);
 	}
-	started=true;
-	// ws.send("TAP");
-	if(speedFactor)
-		bird.vy=-(pipe.vgap/80)*pipe.vgap/bird.height;//-pipe.vgap/20;//-(bird.height*0.17*speedFactor);
+	if(!isMobile){
+		while(pipe.CaseUsed.length<pipe.totalPipes){
+			var ran=Math.floor(Math.random()*pipe.totalPipes);
+			if(pipe.CaseUsed.indexOf(ran)!=pipe.CaseUsed[pipe.CaseUsed.length-1]){
+				pipe.CaseUsed[pipe.CaseUsed.length]=ran%pipe.Case.length;
+				// console.log("calledAgain!");
+			}
+			// console.log(pipe.CaseUsed);
+		}
+		if(!gameStatus){
+			gameStatus=1;
+		}
+		if(speedFactor)
+			jump();//-pipe.vgap/20;//-(bird.height*0.17*speedFactor);
+	}
+	else{
+		if(gameStatus!=2){
+			ws.send("TAP");
+			gameStatus=1;
+		}
+	}
 }
 window.onresize=function(){
 	if(windowSize.offsetHeight<500){
@@ -321,3 +435,10 @@ canvas.onmouseleave=function(){
 	// console.log(raf);
 	window.cancelAnimationFrame(raf)
 }*/
+function checkCollisionWithEllipse(startx,starty,angleOfRotation){
+	var result=Math.pow(((startx+(2*bird.width)/(3*bird.totalFrames))*Math.cos(angleOfRotation)+(starty+bird.height/3)*Math.sin(angleOfRotation)),2) / Math.pow(bird.width/bird.totalFrames,2)  +  Math.pow(((startx+(2*bird.width)/(3*bird.totalFrames))*Math.cos(angleOfRotation)-(starty+bird.height/3)*Math.sin(angleOfRotation)),2) / Math.pow(bird.height/bird.totalFrames,2);
+	return result;
+}
+function jump(){
+	bird.vy=-(pipe.vgap/80)*pipe.vgap/bird.height;	
+}

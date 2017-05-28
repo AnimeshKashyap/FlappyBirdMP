@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/AnimeshKashyap/FlappyBirdMP/issues"
   },
-  "homepage": "https://github.com/AnimeshKashyap/FlappyBirdMP#readme"
+  "homepage": "https://github.com/AnimeshKashyap/FlappyBirdMP#readme",
+  "dependencies": {
+    "connect": "^3.6.2",
+    "nodejs-websocket": "^1.7.1",
+    "serve-static": "^1.12.3"
+  }
 }

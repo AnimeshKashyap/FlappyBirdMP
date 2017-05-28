@@ -1,3 +1,4 @@
-/extra/
-/node_modules/
-/.git/
+extra
+node_modules
+.git
+.gitignore

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
     <title>MobileUI</title>
@@ -66,9 +67,49 @@
     </div>
     <div id="notSupported" class="hide">LANDSCAPE MODE IS NOT SUPPORTED ON THIS RESOLUTION</div>
     <canvas id="canvas" width="0" height="0"></canvas>
+    
+    <script>
+      if(document.fullscreenEnabled){
+        console.log("FS supported");
+        function goFull(){
+          if(!document.webkitIsFullScreen){
+            document.getElementById("canvas").requestFullscreen().then((res)=>{
+              if(res){
+                console.dir("res");
+              }
+              console.dir("FS: in then");
+            }).catch((err)=>{
+              if(err){
+                console.dir(err);
+              }
+              console.dir("FS: in catch");
+            });
+          }
+          else{
+            document.exitFullscreen()
+          }
+        }
+      }
+      else{
+        console.log("FS not supported");
+      }
+      // screen.orientation.lock("natural").then((res)=>{
+      //   if(res){
+      //     alert(res);
+      //   }
+      //   alert("in then");
+      // }).catch((err)=>{
+      //   if(err){
+      //     alert(err);
+      //   }
+      //   alert("in catch");
+      // });
+    </script>
+
     <script type="text/javascript" src="js/websockets.js"></script>
     <script type="text/javascript" src="js/ui.js"></script>
     <script type="text/javascript" src="js/game.js"></script>
+    
     <script type="text/javascript">
       // if(isMobile){
         setTimeout(function(){initGame()},100);

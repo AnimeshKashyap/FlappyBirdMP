@@ -18,8 +18,7 @@ function WebSocketTest()
 {  
    if ("WebSocket" in window)
    {
-      ws = new WebSocket("ws://192.168.0.95:9998/echo");
-      
+      ws = new WebSocket(`ws://${location.host}`);
       // Let us open a web socket
       ws.onopen = function()
       {
@@ -37,10 +36,10 @@ function WebSocketTest()
          ws.send(JSON.stringify(data));
          */
       };
-	
+      
       ws.onmessage = function (evt) 
       { 
-         console.log(evt);
+         // console.log(evt);
          var received_msg = evt.data;
          if(received_msg=="TAP"){
             gameStatus=1;
@@ -72,6 +71,11 @@ function WebSocketTest()
    else
    {
       // The browser doesn't support WebSocket
+      ws = {};
+      ws.send = (msg) => {
+         console.log(`wanted to send a message ${msg}`);
+      }
+      console.log(ws.send);
       console.log("WEBSOCKET NOT SUPPORTED!")
    }
 }

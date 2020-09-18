@@ -273,7 +273,12 @@ function draw(){
 				bird.frame=4*(bird.totalFrames-1);
 				bird.vy=0;
 				gameStatus=2;
-				ws.send("OUT");
+				ws.send(
+					JSON.stringify({
+						timestamp: new Date().getTime(),
+						event_name: "OUT"
+					})
+				);
 			}
 			// COLLISION WITH ELLIPSE SHAPE COLLIDER
 			// console.log("STARTING: "+checkCollisionWithEllipse(pipe.x,pipe.y,angle)+" \nENDING: "+checkCollisionWithEllipse(pipe.x,land.y,angle));
@@ -296,7 +301,12 @@ function draw(){
 			//CALCULATE SCORE:
 			if(bird.x>pipe.x+pipe.width&&!added){
 				score+=1;
-				ws.send("SCORED");
+				ws.send(
+					JSON.stringify({
+						timestamp: new Date().getTime(),
+						event_name: "SCORED"
+					})
+				);
 				// console.log(score);
 				added=true
 			}
@@ -385,7 +395,12 @@ canvas.onmousedown=function(evt){
 			gameStatus=0;
 			initGame(1);
 			if(isMobile){
-				ws.send("RESTART");
+				ws.send(
+					JSON.stringify({
+						timestamp: new Date().getTime(),
+						event_name: "RESTART"
+					})
+				);
 			}
 			return;
 		}
@@ -407,7 +422,12 @@ canvas.onmousedown=function(evt){
 	}
 	else{
 		if(gameStatus!=2){
-			ws.send("TAP");
+			ws.send(
+				JSON.stringify({
+					timestamp: new Date().getTime(),
+					event_name: "TAP"
+				})
+			);
 			gameStatus=1;
 		}
 	}
@@ -422,6 +442,7 @@ window.onresize=function(){
 		window.cancelAnimationFrame(raf);
 		canvas.classList.remove("hide");
 		document.getElementById("notSupported").classList.add("hide");
+		ws.close();
 		initGame();
 	}
 }

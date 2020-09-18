@@ -2,7 +2,7 @@
   "name": "flappybirdmp",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "server-ws.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,7 +18,12 @@
   "homepage": "https://github.com/AnimeshKashyap/FlappyBirdMP#readme",
   "dependencies": {
     "connect": "^3.6.2",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "nodejs-websocket": "^1.7.1",
-    "serve-static": "^1.12.3"
+    "serve-static": "^1.12.3",
+    "uuid": "^8.3.0",
+    "websocket": "^1.0.32",
+    "ws": "^7.3.1"
   }
 }
